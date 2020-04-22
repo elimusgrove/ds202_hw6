@@ -1,0 +1,68 @@
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+options(warn=-1)
+```
+
+## Top dogs
+
+In this homework, you will try to reproduce the fantastic infographic for [top dogs](https://informationisbeautiful.net/visualizations/best-in-show-whats-the-top-data-dog/), originally produced by David McCandless. The raw data can be found [here](https://docs.google.com/spreadsheets/d/1l_HfF5EaN-QgnLc2UYdCc7L2CVrk0p3VdGB1godOyhk/edit#gid=10). You can download this file by File -- Download As -- Microsoft Excel (.xlsx).
+
+**Submission instructions**: Create a folder named `ds202_hw6`, and name the RMarkDown file including your solutions `hw6.Rmd` under this folder. For the submission, create a GitHub repository named `ds202_hw6` under your GitHub account, and push both `hw6.Rmd` and the knitted `hw6.html` before the deadline. I will assume you use the same GitHub username as for your HW5 submission. The latest version of your homework appearing on GitHub before the deadline is graded. *It is crucial to follow the exact folder structure and file names*, so that your homework can be reproduced and graded by an automated script. This homework is **due on April 22** before class.
+
+1. Import the data and clean appropriately. To read in the data, you can use `readxl::read_xlsx('fileNameHere', sheet='sheetNameHere')`. Required data are in the sheets `Best in show` and `Best in show full sheet`. Take extra care on the column names and the first few rows of the data frame after read in.
+
+```{r}
+# Libraries
+library(readxl)
+suppressMessages(library(tidyverse))
+library(ggrepel)
+
+# Import, skip column descriptions
+dogs = suppressMessages(read_xlsx('dogs.xlsx', sheet='Best in show full sheet', skip=3))
+
+# Select columns neeeded
+dogs = dogs[, c(1, 3, 5, 6, 32, 41)]
+
+# Rename columns
+dogs = dogs %>% rename('breed' = 'Dog breed', 'Category' = 'American Kennel Club group', 'datadog_score' = '...5', 'popularity' = '1- 173, 1 = most poular, US. American Kennel Club registrations 2011, pure breeds only', 'Size' = '...32', 'Intelligence' = '...41')
+
+# Prepare dog size
+dogs$Size = ordered(dogs$Size, levels=c('small', 'medium', 'large'))
+levels(dogs$Size) = c(1, 2, 3)
+dogs$Size = as.numeric(dogs$Size)
+
+# Prepare intelligence
+dogs$Intelligence[which(dogs$Intelligence == "no data")] = NA
+dogs$Intelligence = ordered(dogs$Intelligence, levels=c('Brighest', 'Excellent', 'Average' ,'Fair' ,'Lowest'))
+
+# Prepare category
+dogs$Category = factor(dogs$Category)
+
+# Dataframe display
+head(dogs)
+```
+
+2. Create a graphics similar to the  [top dogs](https://informationisbeautiful.net/visualizations/best-in-show-whats-the-top-data-dog/) figure. Your figure needs to display the following information with appropriate plotting elements:
+
+#### Please grade the plot based on the exported plot in the same folder as this RMD (named best_in_show.png) - this stretches out the plot so it is visible.
+
+```{r}
+# Point plot
+p = dogs %>% ggplot(aes(x=datadog_score, y=popularity, text=breed, size=Size, color=Intelligence, shape=Category)) + geom_point() + scale_y_reverse() + scale_shape_manual(values=1:nlevels(dogs$Category), na.translate = FALSE)
+
+# Labels
+p = p + geom_text_repel(aes(label=breed), size=3.5) + xlab('Datadog Score\n(Based on intelligence, cost, longevity, grooming, ailments, and appetite)') + ylab('Popularity') + ggtitle('Best in Show: The Ultimate Dog Breed')
+
+# Axis arrows
+p = p + geom_segment(aes(x=0, xend = 5 , y=174, yend = 174), size=1.5, arrow = arrow(length = unit(0.5,"cm")), color='black')
+p = p + geom_segment(aes(x=0, xend = 0 , y=174, yend = 0), size=1.5, arrow = arrow(length = unit(0.5,"cm")), color='black')
+
+# Theme
+p = p + theme(axis.ticks = element_blank(), axis.text = element_blank(), panel.grid.major = element_blank(), panel.grid.minor = element_blank(), panel.background = element_rect(fill = "#F7F0E1", size = 0)) + guides(color = guide_legend(nrow = 3), shape = guide_legend(nrow = 4), size = guide_legend(nrow = 3)) + scale_color_brewer(palette="Dark2")
+
+p
+
+# Save the plot to a png
+aspect_ratio = 2.5
+ggsave("best_in_show.png", p, height = 7, width = 6 * aspect_ratio, device=NULL)
+```
