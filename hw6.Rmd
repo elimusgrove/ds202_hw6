@@ -44,14 +44,14 @@ head(dogs)
 
 2. Create a graphics similar to the  [top dogs](https://informationisbeautiful.net/visualizations/best-in-show-whats-the-top-data-dog/) figure. Your figure needs to display the following information with appropriate plotting elements:
 
-#### Please grade the plot based on the exported plot in the same folder as this RMD (named best_in_show.png) - this stretches out the plot so it is visible.
+# Please grade the plot based on the exported plot in the same folder as this RMD (named best_in_show.png) - this stretches out the plot so it is visible.
 
 ```{r}
 # Point plot
 p = dogs %>% ggplot(aes(x=datadog_score, y=popularity, text=breed, size=Size, color=Intelligence, shape=Category)) + geom_point() + scale_y_reverse() + scale_shape_manual(values=1:nlevels(dogs$Category), na.translate = FALSE)
 
 # Labels
-p = p + geom_text_repel(aes(label=breed), size=3.5) + xlab('Datadog Score\n(Based on intelligence, cost, longevity, grooming, ailments, and appetite)') + ylab('Popularity') + ggtitle('Best in Show: The Ultimate Dog Breed')
+p = p + geom_text_repel(aes(label=breed), size=3.5) + xlab('Datadog Score\n(Based on intelligence, cost, longevity, grooming, ailments, and appetite)') + ylab('Popularity') + ggtitle(expression(paste(bold('Best in Show: '), 'The Ultimate Data Dog')))
 
 # Axis arrows
 p = p + geom_segment(aes(x=0, xend = 5 , y=174, yend = 174), size=1.5, arrow = arrow(length = unit(0.5,"cm")), color='black')
